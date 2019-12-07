@@ -1,6 +1,7 @@
 import socket
 import time
 import os
+from Crypt_class import *
 
 # use local loop back address by default
 #CHAT_IP = '127.0.0.1'
@@ -41,9 +42,14 @@ def print_state(state):
     else:
         print('Error: wrong state')
 
-def mysend(s, msg):
+def mysend(s, msg, key):
     #append size to message and send it
+    # print('send raw', msg)
+    if key != '__OFFLINE__':
+        ed = ED_Crypt(key)
+        msg = ed.encrypt(msg).decode()
     msg = ('0' * SIZE_SPEC + str(len(msg)))[-SIZE_SPEC:] + str(msg)
+    # print('send final', msg)
     msg = msg.encode()
     total_sent = 0
     while total_sent < len(msg) :
@@ -53,7 +59,7 @@ def mysend(s, msg):
             break
         total_sent += sent
 
-def myrecv(s, request_from):
+def myrecv(s, request_from, key):
     #receive size first
     size = ''
     while len(size) < SIZE_SPEC:
@@ -65,9 +71,9 @@ def myrecv(s, request_from):
                 print('The server broke down, see you next time!')
                 os._exit(0)
             return('')
-        if not text:
-            print('disconnected')
-            return('')
+        # if not text:
+        #     print('disconnected')
+        #     return('')
         size += text
     size = int(size)
     #now receive message
@@ -78,7 +84,12 @@ def myrecv(s, request_from):
             print('disconnected')
             break
         msg += text
-    #print ('received '+message)
+    # print ('received '+message)
+    # print('recv raw', msg)
+    if key != '__OFFLINE__':
+        ed = ED_Crypt(key)
+        msg = ed.decrypt(msg).decode()
+    # print('recv final', msg)
     return (msg)
 
 def text_proc(text, user):

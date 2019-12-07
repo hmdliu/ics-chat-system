@@ -28,8 +28,8 @@ class ClientSM:
 
     def connect_to(self, peer):
         msg = json.dumps({"action":"connect", "target":peer})
-        mysend(self.s, msg)
-        response = json.loads(myrecv(self.s, 'client'))
+        mysend(self.s, msg, self.me)
+        response = json.loads(myrecv(self.s, 'client', self.me))
         if response["status"] == "success":
             self.peer = peer
             self.out_msg += 'You are connected with '+ self.peer + '\n'
@@ -44,7 +44,7 @@ class ClientSM:
 
     def disconnect(self):
         msg = json.dumps({"action":"disconnect"})
-        mysend(self.s, msg)
+        mysend(self.s, msg, self.me)
         self.out_msg += 'You are disconnected from ' + self.peer + '\n'
         self.peer = ''
 
@@ -60,18 +60,18 @@ class ClientSM:
             if len(my_msg) > 0:
 
                 if my_msg == 'q':
-                    mysend(self.s, json.dumps({"action":"logout"}))
+                    mysend(self.s, json.dumps({"action":"logout"}), self.me)
                     self.out_msg += 'See you next time!\n'
                     self.state = S_OFFLINE
 
                 elif my_msg == 'time':
-                    mysend(self.s, json.dumps({"action":"time"}))
-                    time_in = json.loads(myrecv(self.s, 'client'))["results"]
+                    mysend(self.s, json.dumps({"action":"time"}), self.me)
+                    time_in = json.loads(myrecv(self.s, 'client', self.me))["results"]
                     self.out_msg += "Time is: " + time_in
 
                 elif my_msg == 'who':
-                    mysend(self.s, json.dumps({"action":"list"}))
-                    logged_in = json.loads(myrecv(self.s, 'client'))["results"]
+                    mysend(self.s, json.dumps({"action":"list"}), self.me)
+                    logged_in = json.loads(myrecv(self.s, 'client', self.me))["results"]
                     self.out_msg += 'Here are all the users in the system:\n'
                     self.out_msg += logged_in
 
@@ -86,8 +86,8 @@ class ClientSM:
 
                 elif my_msg[0] == '?':
                     term = my_msg[1:].strip()
-                    mysend(self.s, json.dumps({"action":"search", "target":term}))
-                    search_rslt = json.loads(myrecv(self.s, 'client'))["results"].strip()
+                    mysend(self.s, json.dumps({"action":"search", "target":term}), self.me)
+                    search_rslt = json.loads(myrecv(self.s, 'client', self.me))["results"].strip()
                     if (len(search_rslt)) > 0:
                         self.out_msg += search_rslt + '\n\n'
                     else:
@@ -95,22 +95,22 @@ class ClientSM:
 
                 elif my_msg[0] == 'p' and my_msg[1:].strip().isdigit():
                     poem_idx = my_msg[1:].strip()
-                    mysend(self.s, json.dumps({"action":"poem", "target":poem_idx}))
-                    poem = json.loads(myrecv(self.s, 'client'))["results"]
+                    mysend(self.s, json.dumps({"action":"poem", "target":poem_idx}), self.me)
+                    poem = json.loads(myrecv(self.s, 'client', self.me))["results"]
                     if (len(poem) > 0):
                         self.out_msg += poem + '\n\n'
                     else:
                         self.out_msg += 'Sonnet ' + poem_idx + ' not found\n\n'
 
                 elif my_msg == 'ping blah blah':
-                    mysend(self.s, json.dumps({"action":"bonus"}))
-                    server_msg = json.loads(myrecv(self.s, 'client'))["message"]
+                    mysend(self.s, json.dumps({"action":"bonus"}), self.me)
+                    server_msg = json.loads(myrecv(self.s, 'client', self.me))["message"]
                     self.out_msg += server_msg
 
                 elif my_msg == '__upload':
                     data = str(open('1.png', 'rb').read())
-                    mysend(self.s, json.dumps({"action":"upload", "file_name":"a.png", "data":data}))
-                    server_msg = json.loads(myrecv(self.s, 'client'))["message"]
+                    # mysend(self.s, json.dumps({"action":"upload", "file_name":"a.png", "data":data}))
+                    # server_msg = json.loads(myrecv(self.s, 'client'))["message"]
                     self.out_msg += server_msg
 
                 else:
@@ -143,9 +143,9 @@ class ClientSM:
             if len(my_msg) > 0:     # my stuff going out
                 if my_msg[:6] == '_flip_':
                     exchage_msg = '_flip_ ' + ' '.join(my_msg[6:].strip().split(' ')[::-1])
-                    mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":exchage_msg}))
+                    mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":exchage_msg}), self.me)
                 else:
-                    mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":my_msg}))
+                    mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":my_msg}), self.me)
                 if my_msg == 'bye':
                     self.disconnect()
                     self.state = S_LOGGEDIN

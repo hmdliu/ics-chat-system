@@ -46,9 +46,10 @@ class Server:
     def login(self, sock):
         # read the msg that should have login code plus username
         try:
-            msg = json.loads(myrecv(sock, 'server'))
+            # username = self.logged_sock2name[sock]
+            msg = json.loads(myrecv(sock, 'server', '__OFFLINE__'))
             if len(msg) > 0:
-                print(msg)
+                # print(msg)
                 if msg["action"] == "login":
                     name = msg["name"]
                     if self.group.is_member(name) != True:
@@ -61,7 +62,7 @@ class Server:
                             else:
                                 name_status = 'name_fail'
                             mysend(sock, json.dumps(
-                                {"action": "login", "status": name_status}))
+                                {"action": "login", "status": name_status}), '__OFFLINE__')
 
                         elif msg["step"] == 'pwd':
                             pwd = pkl.load(open(path + name + '.pwd', 'rb'))
@@ -81,15 +82,15 @@ class Server:
                                 print('[' + name + '] logged in')
                                 self.group.join(name)
                                 mysend(sock, json.dumps(
-                                    {"action": "login", "status": "pwd_ok"}))
+                                    {"action": "login", "status": "pwd_ok"}), '__OFFLINE__')
                             else:
                                 # self.new_clients.remove(sock)
                                 mysend(sock, json.dumps(
-                                    {"action": "login", "status": "pwd_fail"}))
+                                    {"action": "login", "status": "pwd_fail"}), '__OFFLINE__')
 
                     else:  # a client under this name has already logged in
                         mysend(sock, json.dumps(
-                            {"action": "login", "status": "duplicate"}))
+                            {"action": "login", "status": "duplicate"}), '__OFFLINE__')
                         print(name + ' duplicate login attempt')
                 else:
                     print('wrong code received')
@@ -119,7 +120,8 @@ class Server:
 # ==============================================================================
     def handle_msg(self, from_sock):
         # read msg code
-        msg = myrecv(from_sock, 'server')
+        username = self.logged_sock2name[from_sock]
+        msg = myrecv(from_sock, 'server', username)
         if len(msg) > 0:
             # ==============================================================================
             # handle connect request this is implemented for you
@@ -140,11 +142,11 @@ class Server:
                     for g in the_guys[1:]:
                         to_sock = self.logged_name2sock[g]
                         mysend(to_sock, json.dumps(
-                            {"action": "connect", "status": "request", "from": from_name}))
+                            {"action": "connect", "status": "request", "from": from_name}), g)
                 else:
                     msg = json.dumps(
                         {"action": "connect", "status": "no-user"})
-                mysend(from_sock, msg)
+                mysend(from_sock, msg, from_name)
 # ==============================================================================
 # handle messeage exchange: IMPLEMENT THIS
 # ==============================================================================
@@ -167,7 +169,7 @@ class Server:
                     # ---- start your code ---- #
                     # mysend( to_sock, "...Remember to index the messages before sending, or search won't work")
                     self.indices[g].add_msg_and_index(from_message)
-                    mysend(to_sock, json.dumps({"action": "exchange", "from": from_name, "message": from_message}))
+                    mysend(to_sock, json.dumps({"action": "exchange", "from": from_name, "message": from_message}), g)
                     # ---- end of your code --- #
 
 # ==============================================================================
@@ -182,7 +184,7 @@ class Server:
                     g = the_guys.pop()
                     to_sock = self.logged_name2sock[g]
                     mysend(to_sock, json.dumps(
-                        {"action": "disconnect", "message": "everyone left, you are alone\n"}))
+                        {"action": "disconnect", "message": "everyone left, you are alone\n"}), g)
 # ==============================================================================
 #                 listing available peers: IMPLEMENT THIS
 # ==============================================================================
@@ -198,7 +200,7 @@ class Server:
 
                 # ---- end of your code --- #
                 mysend(from_sock, json.dumps(
-                    {"action": "list", "results": msg}))
+                    {"action": "list", "results": msg}), from_name)
 # ==============================================================================
 #             retrieve a sonnet : IMPLEMENT THIS
 # ==============================================================================
@@ -222,19 +224,21 @@ class Server:
                 # ---- end of your code --- #
 
                 mysend(from_sock, json.dumps(
-                    {"action": "poem", "results": poem}))
+                    {"action": "poem", "results": poem}), from_name)
 # ==============================================================================
 #                 time
 # ==============================================================================
             elif msg["action"] == "time":
+                from_name = self.logged_sock2name[from_sock]
                 ctime = time.strftime('%d.%m.%y,%H:%M', time.localtime())
                 mysend(from_sock, json.dumps(
-                    {"action": "time", "results": ctime}))
+                    {"action": "time", "results": ctime}), from_name)
 # ==============================================================================
 #                 bonus - blah blah
 # ==============================================================================
             elif msg["action"] == "bonus":
-                mysend(from_sock, json.dumps({"action": "bonus", "message": "pong blah blah\n"}))
+                from_name = self.logged_sock2name[from_sock]
+                mysend(from_sock, json.dumps({"action": "bonus", "message": "pong blah blah\n"}), from_name)
 
             elif msg["action"] == "logout":
                 self.logout(from_sock)
@@ -244,10 +248,10 @@ class Server:
                     from_name = self.logged_sock2name[from_sock]
                     out_f = open('./' + from_name + '/' + msg["action"], 'wb')
                     pkl.dump(eval(msg["data"]), out_f)
-                    mysend(from_sock, json.dumps({"action": "upload", "message": "success\n"}))
+                    # mysend(from_sock, json.dumps({"action": "upload", "message": "success\n"}))
                 except Exception as err:
                     print(err)
-                    mysend(from_sock, json.dumps({"action": "upload", "message": "fail\n"}))
+                    # mysend(from_sock, json.dumps({"action": "upload", "message": "fail\n"}))
 
 # ==============================================================================
 #                 search: : IMPLEMENT THIS
@@ -267,7 +271,7 @@ class Server:
 
                 # ---- end of your code --- #
                 mysend(from_sock, json.dumps(
-                    {"action": "search", "results": search_result}))
+                    {"action": "search", "results": search_result}), from_name)
 
 # ==============================================================================
 #                 the "from" guy really, really has had enough

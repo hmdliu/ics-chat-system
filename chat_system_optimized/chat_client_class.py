@@ -38,11 +38,11 @@ class Client:
     def shutdown_chat(self):
         return
 
-    def send(self, msg):
-        mysend(self.socket, msg)
+    def send(self, msg, key):
+        mysend(self.socket, msg, key)
 
-    def recv(self):
-        return myrecv(self.socket, 'client')
+    def recv(self, key):
+        return myrecv(self.socket, 'client', key)
 
     def get_msgs(self):
         read, write, error = select.select([self.socket], [], [], 0)
@@ -52,7 +52,7 @@ class Client:
         if len(self.console_input) > 0:
             my_msg = self.console_input.pop(0)
         if self.socket in read:
-            peer_msg = self.recv()
+            peer_msg = self.recv(self.name)
         return my_msg, peer_msg
 
     def output(self):
@@ -69,8 +69,8 @@ class Client:
                 msg = json.dumps({"action":"login", "step":"name", "name":self.name})
             elif self.login_step == 'name_ok':
                 msg = json.dumps({"action":"login", "step":"pwd", "name":self.name, "pwd":my_msg})
-            self.send(msg)
-            response = json.loads(self.recv())
+            self.send(msg, '__OFFLINE__')
+            response = json.loads(self.recv('__OFFLINE__'))
             # print(str(response))
             if response["status"] == 'name_ok':
                 self.login_step = 'name_ok'
@@ -105,7 +105,10 @@ class Client:
         while True:
             text = sys.stdin.readline()[:-1]
             # print(text)
-            self.console_input.append(text) # no need for lock, append is thread safe
+            if text.strip() != '':
+                self.console_input.append(text) # no need for lock, append is thread safe
+            else:
+                continue
 
     def print_instructions(self):
         self.system_msg += menu

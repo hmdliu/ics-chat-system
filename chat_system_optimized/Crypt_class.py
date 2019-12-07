@@ -58,6 +58,17 @@ class Crypt:
     def get_key(self):
         return self.key
 
+
+class ED_Crypt:
+    def __init__(self, username):
+        try:
+            key_f = open('key', 'rb')
+            self.key = pickle.load(key_f)[username]
+            key_f.close()
+        except Exception as err:
+            print(err)
+            self.key = ''
+
     def encrypt(self, string):
         key = self.key
         fernet = Fernet(key)
@@ -70,9 +81,16 @@ class Crypt:
         decrypted = fernet.decrypt(string.encode())
         return decrypted
 
+
 if __name__ == "__main__":
-    ed = Crypt('xg7', 'password')
-    s = 'I_LOVE_ICS'
-    s_ = ed.encrypt(s).decode()
-    print(s_, '\n')
-    print(ed.decrypt(s_).decode(), '\n')
+
+    cr = Crypt('xg7', 'password')
+    print(cr.get_key(), '\n')
+
+    ed = ED_Crypt('xg7')
+
+    s0 = 'I_LOVE_ICS'
+    s1 = ed.encrypt(s0).decode()
+    print(s1, '\n')
+    s2 = ed.decrypt(s1).decode()
+    print(s2, '\n')
