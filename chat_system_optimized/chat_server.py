@@ -13,8 +13,10 @@ import string
 import indexer
 import json
 import pickle as pkl
-from chat_utils import *
 import chat_group as grp
+from chat_utils import *
+from UserPwd_class import *
+from Crypt_class import *
 
 
 class Server:
@@ -46,26 +48,45 @@ class Server:
         try:
             msg = json.loads(myrecv(sock, 'server'))
             if len(msg) > 0:
-
+                print(msg)
                 if msg["action"] == "login":
                     name = msg["name"]
                     if self.group.is_member(name) != True:
-                        # move socket from new clients list to logged clients
-                        self.new_clients.remove(sock)
-                        # add into the name to sock mapping
-                        self.logged_name2sock[name] = sock
-                        self.logged_sock2name[sock] = name
-                        # load chat history of that user
-                        if name not in self.indices.keys():
-                            try:
-                                self.indices[name] = pkl.load(
-                                    open('./user/' + name + '/' + name + '.idx', 'rb'))
-                            except IOError:  # chat index does not exist, then create one
-                                self.indices[name] = indexer.Index(name)
-                        print('[' + name + '] logged in')
-                        self.group.join(name)
-                        mysend(sock, json.dumps(
-                            {"action": "login", "status": "ok"}))
+
+                        path = './user/' + name + '/'
+
+                        if msg["step"] == 'name':
+                            if os.path.exists(path) and os.path.exists(path + 'key') and os.path.exists(path + name + '.pwd'):
+                                name_status = 'name_ok'
+                            else:
+                                name_status = 'name_fail'
+                            mysend(sock, json.dumps(
+                                {"action": "login", "status": name_status}))
+
+                        elif msg["step"] == 'pwd':
+                            pwd = pkl.load(open(path + name + '.pwd', 'rb'))
+                            if pwd.check_pwd(msg["pwd"]):
+                                # move socket from new clients list to logged clients
+                                self.new_clients.remove(sock)
+                                # add into the name to sock mapping
+                                self.logged_name2sock[name] = sock
+                                self.logged_sock2name[sock] = name
+                                # load chat history of that user
+                                if name not in self.indices.keys():
+                                    try:
+                                        self.indices[name] = pkl.load(
+                                            open('./user/' + name + '/' + name + '.idx', 'rb'))
+                                    except IOError:  # chat index does not exist, then create one
+                                        self.indices[name] = indexer.Index(name)
+                                print('[' + name + '] logged in')
+                                self.group.join(name)
+                                mysend(sock, json.dumps(
+                                    {"action": "login", "status": "pwd_ok"}))
+                            else:
+                                # self.new_clients.remove(sock)
+                                mysend(sock, json.dumps(
+                                    {"action": "login", "status": "pwd_fail"}))
+
                     else:  # a client under this name has already logged in
                         mysend(sock, json.dumps(
                             {"action": "login", "status": "duplicate"}))
@@ -74,7 +95,8 @@ class Server:
                     print('wrong code received')
             else:  # client died unexpectedly
                 self.logout(sock)
-        except:
+        except Exception as err:
+            print(err)
             self.all_sockets.remove(sock)
 
     def logout(self, sock):
@@ -84,6 +106,7 @@ class Server:
         if not os.path.exists(path):
             os.makedirs(path)
         pkl.dump(self.indices[name], open(path + name + '.idx', 'wb'))
+        print('[' + name + '] logged out.')
         del self.indices[name]
         del self.logged_name2sock[name]
         del self.logged_sock2name[sock]
@@ -212,6 +235,20 @@ class Server:
 # ==============================================================================
             elif msg["action"] == "bonus":
                 mysend(from_sock, json.dumps({"action": "bonus", "message": "pong blah blah\n"}))
+
+            elif msg["action"] == "logout":
+                self.logout(from_sock)
+
+            elif msg["action"] == "upload":
+                try:
+                    from_name = self.logged_sock2name[from_sock]
+                    out_f = open('./' + from_name + '/' + msg["action"], 'wb')
+                    pkl.dump(eval(msg["data"]), out_f)
+                    mysend(from_sock, json.dumps({"action": "upload", "message": "success\n"}))
+                except Exception as err:
+                    print(err)
+                    mysend(from_sock, json.dumps({"action": "upload", "message": "fail\n"}))
+
 # ==============================================================================
 #                 search: : IMPLEMENT THIS
 # ==============================================================================
@@ -247,6 +284,7 @@ class Server:
         print('starting server...')
         while(1):
             read, write, error = select.select(self.all_sockets, [], [])
+            # time.sleep(0.2)
             print('checking logged clients..')
             for logc in list(self.logged_name2sock.values()):
                 if logc in read:

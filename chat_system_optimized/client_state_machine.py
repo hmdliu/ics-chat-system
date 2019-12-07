@@ -60,6 +60,7 @@ class ClientSM:
             if len(my_msg) > 0:
 
                 if my_msg == 'q':
+                    mysend(self.s, json.dumps({"action":"logout"}))
                     self.out_msg += 'See you next time!\n'
                     self.state = S_OFFLINE
 
@@ -103,6 +104,12 @@ class ClientSM:
 
                 elif my_msg == 'ping blah blah':
                     mysend(self.s, json.dumps({"action":"bonus"}))
+                    server_msg = json.loads(myrecv(self.s, 'client'))["message"]
+                    self.out_msg += server_msg
+
+                elif my_msg == '__upload':
+                    data = str(open('1.png', 'rb').read())
+                    mysend(self.s, json.dumps({"action":"upload", "file_name":"a.png", "data":data}))
                     server_msg = json.loads(myrecv(self.s, 'client'))["message"]
                     self.out_msg += server_msg
 
