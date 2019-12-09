@@ -11,6 +11,6 @@ NYUSH Fall 2019
   Secure messaging - **Encrypt** all messages
 
 - 19/12/09
-  Cloud Disk - All basic functions
+  **Cloud Disk** - All basic functions
 
  
