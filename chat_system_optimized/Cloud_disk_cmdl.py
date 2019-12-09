@@ -37,41 +37,6 @@ class Cloud:
         server_msg = json.loads(myrecv(self.sock, 'client', self.name))
         return server_msg
 
-    def print_top(self):
-        print()
-        print('=' * 17, 'Cloud Disk Panel', '=' * 17, '\n')
-        print('Commands:\n')
-        print('  ls: List all your files.')
-        print('  upload [path]: Upload a new file.')
-        print('  del [fileindex]: Delete an existing file.')
-        print('  info [fileindex]: Check a file\'s datailed info.')
-        print('  q: Save all changes and quit.\n')
-
-    def print_bottom(self):
-        print('\n' + '=' * 52 + '\n')
-
-    def get_cmd(self):
-        pass
-
-    def read_input(self):
-        while True:
-            cmd = sys.stdin.readline()[:-1]
-            # print(text)
-            if cmd == 'ls':
-                self.cloud_ls()
-            elif cmd[:6] == 'upload':
-                self.cloud_upload(cmd)
-            elif cmd[:3] == 'del':
-                self.cloud_delete(cmd)
-            elif cmd[:4] == 'info':
-                self.cloud_info(cmd)
-            elif cmd == 'q':
-                print()
-                break
-            else:
-                print()
-                self.get_cmd()
-
     def get_file_index(self):
         try:
             cmd_msg = json.dumps({"action": "cloud", "cmd": "get_file_index"})
@@ -80,11 +45,6 @@ class Cloud:
         except Exception as err:
             self.file_idx = {0:'error'}
             print(err, '\n')
-
-    def cloud_cmdl(self):
-        self.print_top()
-        self.get_cmd()
-        self.print_bottom()
 
     def format_str(self, s, length, p, ch):
         if len(s) < length:
