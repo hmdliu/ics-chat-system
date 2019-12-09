@@ -9,6 +9,7 @@ import os
 import time
 from Crypt_class import *
 from UserPwd_class import *
+from Cloud_disk_cmdl import *
 
 def regist():
     flag = True
@@ -25,6 +26,7 @@ def regist():
             if pwd == pwd_confirm:
                 self_crypt = Crypt(name, pwd)
                 self_pwd = UserPwd(name, pwd)
+                self_cloud = Cloud_init(name)
                 time.sleep(0.3)
                 print('Registration has been created successfully.\n')
                 print('=' * 47, '\n')

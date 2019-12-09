@@ -1,9 +1,10 @@
 """
 Created on Sun Apr  5 00:00:32 2015
 
-@author: zhengzhang
+@author: zhengzhang, hl3797
 """
 from chat_utils import *
+from Cloud_disk_cmdl import *
 import json
 
 class ClientSM:
@@ -22,6 +23,7 @@ class ClientSM:
 
     def set_myname(self, name):
         self.me = name
+        self.cloud = Cloud(self.s, self.me)
 
     def get_myname(self):
         return self.me
@@ -107,11 +109,44 @@ class ClientSM:
                     server_msg = json.loads(myrecv(self.s, 'client', self.me))["message"]
                     self.out_msg += server_msg
 
-                elif my_msg == '__upload':
-                    data = str(open('1.png', 'rb').read())
-                    # mysend(self.s, json.dumps({"action":"upload", "file_name":"a.png", "data":data}))
-                    # server_msg = json.loads(myrecv(self.s, 'client'))["message"]
-                    self.out_msg += server_msg
+                elif my_msg[:7] == '_cloud_':
+                    cmd = my_msg.split(' ')
+                    if len(cmd) > 1:
+                        # c = Cloud(self.s, self.me)
+                        if cmd[1] == 'ls':
+                            self.cloud.cloud_ls()
+                        elif cmd[1] == 'info':
+                            try:
+                                self.cloud.cloud_info(cmd[2])
+                            except Exception as err:
+                                print('Please add file index.\n')
+                        elif cmd[1] == 'del':
+                            try:
+                                self.cloud.cloud_delete(cmd[2])
+                            except Exception as err:
+                                print(err)
+                                print('Please add file index.\n')
+                        elif cmd[1] == 'upload':
+                            try:
+                                if '.' in cmd[2]:
+                                    self.cloud.cloud_upload('./', cmd[2])
+                                else:
+                                    print('Invalid file type.\n')
+                            except Exception as err:
+                                print(err)
+                                print('Please add filename.\n')
+                        elif cmd[1] == 'download':
+                            # try:
+                                self.cloud.cloud_download('./', cmd[2])
+                            # except Exception as err:
+                            #     print(err)
+                            #     print('Please add file index.\n')
+                        else:
+                            print('Invalid command.\n')
+
+
+                    else:
+                        print('Invalid command.\n')
 
                 else:
                     self.out_msg += menu
@@ -144,6 +179,18 @@ class ClientSM:
                 if my_msg[:6] == '_flip_':
                     exchage_msg = '_flip_ ' + ' '.join(my_msg[6:].strip().split(' ')[::-1])
                     mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":exchage_msg}), self.me)
+                elif my_msg[:7] == '_cloud_':
+                    cmd = my_msg.split(' ')
+                    if cmd[1] == 'ls' and len(cmd) == 2:
+                        self.cloud.cloud_ls()
+                    elif cmd[1] == 'share' and len(cmd) == 3 and len(cmd[2]) == 3:
+                        mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":my_msg + self.cloud.get_file_info(cmd[2])}), self.me)
+                    elif cmd[1] == 'recv' and len(cmd) == 4 and len(cmd[3]) == 3:
+                        self.cloud.cloud_recv(cmd[2], cmd[3])
+                    elif cmd[1] == 'info' and len(cmd) == 3 and len(cmd[2]) == 3:
+                        self.cloud.cloud_info(cmd[2])
+                    else:
+                        print(CHAT_CLOUD_CMD)
                 else:
                     mysend(self.s, json.dumps({"action":"exchange", "from":"[" + self.me + "]", "message":my_msg}), self.me)
                 if my_msg == 'bye':

@@ -121,12 +121,16 @@ class Client:
         while True:
             time.sleep(0.1)
             login_msg = self.login()
-            if 'pwd' in login_msg[1]:
-                os.system('cls')
+            if login_msg == None:
+                print('You are not in this chat group. Please regist first.\n')
+                os._exit(0)
+            if len(login_msg) > 1:
+                if 'pwd' in login_msg[1]:
+                    os.system('cls')
             if login_msg[0] == True:
                 break
             self.output()
-        self.system_msg += 'Welcome, ' + self.get_name() + '!'
+        self.system_msg += 'Welcome, ' + self.get_name() + '!\n'
         self.output()
         while self.sm.get_state() != S_OFFLINE:
             self.proc()

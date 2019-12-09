@@ -8,16 +8,24 @@ from Crypt_class import *
 CHAT_IP = socket.gethostbyname(socket.gethostname())
 #CHAT_IP = ''#socket.gethostbyname(socket.gethostname())
 
+PROJECT_PATH = 'D:\\Github\\ics-chat-system\\chat_system_optimized'
+
+CHAT_CLOUD_CMD = '\n\n[Cloud Commands Instructions]:\n\n  _cloud_ ls: List all your cloud files\n  _cloud_ info [idx]: View the info of a file.\n  _cloud_ share [idx]: Share a file to your friend in current group\n  _cloud_ recv [owner] [idx]: Receive a file from your friend.\n'
+
 CHAT_PORT = 1112
 SERVER = (CHAT_IP, CHAT_PORT)
 
 menu = "\n++++ Choose one of the following commands\n \
         time: calendar time in the system\n \
         who: to find out who else are there\n \
-        ping blah blah: bonus fuction\n \
-        c _peer_: to connect to the _peer_ and chat\n \
-        ? _term_: to search your chat logs where _term_ appears\n \
-        p _#_: to get number <#> sonnet\n \
+        c [peer]: to connect to the [peer] and chat\n \
+        ? [term]: to search your chat logs where [term] appears\n \
+        p [#]: to get number [#] sonnet\n \
+        _cloud_ ls: List all your cloud files\n \
+        _cloud_ del [idx]: Delete a cloud file\n \
+        _cloud_ info [idx]: View a cloud file info\n \
+        _cloud_ upload [filename]: Upload a cloud file\n \
+        _cloud_ download [filename]: Download a cloud file\n \
         q: to leave the chat system\n\n"
 
 S_OFFLINE   = 0
@@ -66,10 +74,11 @@ def myrecv(s, request_from, key):
         try:
             text = s.recv(SIZE_SPEC - len(size)).decode()
         except Exception as err:
-            print(err)
             if request_from == 'client':
                 print('The server broke down, see you next time!')
                 os._exit(0)
+            else:
+                print(err)
             return('')
         # if not text:
         #     print('disconnected')

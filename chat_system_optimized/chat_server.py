@@ -1,7 +1,7 @@
 """
 Created on Tue Jul 22 00:47:05 2014
 
-@author: alina, zzhang
+@author: alina, zzhang, hl3797
 """
 
 import os
@@ -17,7 +17,7 @@ import chat_group as grp
 from chat_utils import *
 from UserPwd_class import *
 from Crypt_class import *
-
+from win32api import ShellExecute
 
 class Server:
     def __init__(self):
@@ -232,7 +232,7 @@ class Server:
                 from_name = self.logged_sock2name[from_sock]
                 ctime = time.strftime('%d.%m.%y,%H:%M', time.localtime())
                 mysend(from_sock, json.dumps(
-                    {"action": "time", "results": ctime}), from_name)
+                    {"action": "time", "results": ctime + '\n'}), from_name)
 # ==============================================================================
 #                 bonus - blah blah
 # ==============================================================================
@@ -243,14 +243,33 @@ class Server:
             elif msg["action"] == "logout":
                 self.logout(from_sock)
 
-            elif msg["action"] == "upload":
+            elif msg["action"] == "cloud":
                 try:
                     from_name = self.logged_sock2name[from_sock]
-                    out_f = open('./' + from_name + '/' + msg["action"], 'wb')
-                    pkl.dump(eval(msg["data"]), out_f)
-                    # mysend(from_sock, json.dumps({"action": "upload", "message": "success\n"}))
+                    idx_path = './user/' + from_name + '/cloud/file.idx'
+                    idx_f = open(idx_path, 'rb')
+                    my_cloud = pkl.load(idx_f)
+                    if msg["cmd"] == "get_file_index":
+                        idx_data = my_cloud.get_file_index()
+                        mysend(from_sock, json.dumps({"action": "cloud", "cmd": "get_file_index", "index": idx_data}), from_name)
+                    elif msg["cmd"] == "delete":
+                        del_result = my_cloud.delete_file(msg["file_idx"])
+                        mysend(from_sock, json.dumps({"action": "cloud", "cmd": "delete", "result": del_result}), from_name)
+                    elif msg["cmd"] == "upload":
+                        add_result = my_cloud.add_file(msg["filename"], from_name)
+                        mysend(from_sock, json.dumps({"action": "cloud", "cmd": "upload", "result": add_result}), from_name)
+                    elif msg["cmd"] == "download":
+                        fetch_result = my_cloud.fetch_file(msg["file_idx"], from_name)
+                        mysend(from_sock, json.dumps({"action": "cloud", "cmd": "download", "result": fetch_result}), from_name)
+                    elif msg["cmd"] == "recv":
+                        recv_result = my_cloud.recv_file(msg["file_idx"], from_name, msg["owner"])
+                        mysend(from_sock, json.dumps({"action": "cloud", "cmd": "recv", "result": recv_result}), from_name)
+                    else:
+                        mysend(from_sock, json.dumps({"action": "cloud", "cmd": "error", "result": "error"}), from_name)
+
+
                 except Exception as err:
-                    print(err)
+                    print(err, '\n')
                     # mysend(from_sock, json.dumps({"action": "upload", "message": "fail\n"}))
 
 # ==============================================================================
@@ -284,20 +303,29 @@ class Server:
 # ==============================================================================
 # main loop, loops *forever*
 # ==============================================================================
+    def ftp_startup(self):
+        os.chdir(PROJECT_PATH)
+        # os.system('dir')
+        # os.system('python .\\Ftp_server.py')
+        ShellExecute(0, 'open', 'python', './Ftp_server.py', '', 1)
+
     def run(self):
         print('starting server...')
+
+        self.ftp_startup()
+
         while(1):
             read, write, error = select.select(self.all_sockets, [], [])
             # time.sleep(0.2)
-            print('checking logged clients..')
+            # print('checking logged clients..')
             for logc in list(self.logged_name2sock.values()):
                 if logc in read:
                     self.handle_msg(logc)
-            print('checking new clients..')
+            # print('checking new clients..')
             for newc in self.new_clients[:]:
                 if newc in read:
                     self.login(newc)
-            print('checking for new connections..')
+            print('Checking for new connections & clients ...')
             if self.server in read:
                 # new client request
                 sock, address = self.server.accept()
