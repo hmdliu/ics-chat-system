@@ -148,7 +148,7 @@ class CloudIndex:
             if flag:
                 self.file_index[self.index_count] = {'name':filename, 'owner':owner, 'time':self.get_ctime(), 'size':self.get_file_size(path + filename + '.zip')}
                 self.index_count += 1
-                print('[' + self.name + '] Received file [' + filename + ']')
+                print('[' + self.name + '] Received file [' + filename + '] from ' + owner)
                 self.dump_index()
                 return 1000
         else:
@@ -210,8 +210,8 @@ class CloudIndex:
                         owner_path = './user/' + file_owner + '/cloud/'
                         new_path = './user/' + from_name + '/cloud/'
                         ori_key = self.get_key(file_owner)
-                        new_key = self.key
-                        print(ori_key, new_key)
+                        new_key = self.get_key(from_name)
+                        # print(ori_key, new_key)
                         # print(owner_path + file_name + '.zip')
                         if os.path.exists(owner_path + file_name + '.zip'):
                             status_code = zip_recrypt(owner_path, new_path, file_name + '.zip', ori_key, new_key)

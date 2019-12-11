@@ -112,7 +112,7 @@ class Cloud:
     def cloud_upload(self, path, filename):
         try:
             status_code = zip_compress(path, filename, self.key, False)
-            if self.ftp_client.ftp_login('localhost', self.name, self.key) == 1000 and status_code == 1000:
+            if self.ftp_client.ftp_login(CHAT_IP, self.name, self.key) == 1000 and status_code == 1000:
                 status_code = self.ftp_client.stor_file(filename + '.zip')
                 if status_code == 1000:
                     cmd_msg = json.dumps({"action": "cloud", "cmd": "upload", "filename":filename})
@@ -146,7 +146,7 @@ class Cloud:
                 return
             # print(type(status_code))
             if status_code == 1000:
-                if self.ftp_client.ftp_login('localhost', self.name, self.key) == 1000:
+                if self.ftp_client.ftp_login(CHAT_IP, self.name, self.key) == 1000:
                     filename = self.file_idx[str(int(file_idx))]['name']
                     status_code = self.ftp_client.retr_file(filename + '.zip')
                     if status_code == 1000:

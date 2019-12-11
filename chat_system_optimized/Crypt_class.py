@@ -85,12 +85,19 @@ class ED_Crypt:
 if __name__ == "__main__":
 
     cr = Crypt('xg7', 'password')
-    print(cr.get_key(), '\n')
+    print('[Instance] Name:xg7  Pwd:password\n')
+    print('[Key]', cr.get_key().decode(), '\n')
 
     ed = ED_Crypt('xg7')
-
     s0 = 'I_LOVE_ICS'
+    print('[Text]', s0, '\n')
     s1 = ed.encrypt(s0).decode()
-    print(s1, '\n')
+    print('[Encrypted]', s1, '\n')
     s2 = ed.decrypt(s1).decode()
-    print(s2, '\n')
+    print('[Decrypted]', s2, '\n')
+
+    a = ED_Crypt('a')
+    print(a.key.decode())
+
+    b = ED_Crypt('b')
+    print(b.key.decode())

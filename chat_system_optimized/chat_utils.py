@@ -24,7 +24,7 @@ menu = "\n++++ Choose one of the following commands\n \
         _cloud_ ls: List all your cloud files\n \
         _cloud_ del [idx]: Delete a cloud file\n \
         _cloud_ info [idx]: View a cloud file info\n \
-        _cloud_ upload [filename]: Upload a cloud file\n \
+        _cloud_ upload [filename]: Upload a local file\n \
         _cloud_ download [filename]: Download a cloud file\n \
         q: to leave the chat system\n\n"
 

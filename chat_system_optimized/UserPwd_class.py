@@ -57,9 +57,9 @@ class UserPwd:
     def check_pwd(self, input_pwd):
         # Check login password
         try:
-            t = self.get_length(input_pwd)
             # pwd_f = open(self.path, 'rb')
             # pickle.load(pwd_f)
+            t = self.get_length(input_pwd)
             pwd = self.pwd[t:-t][::-2]
             return True if input_pwd == pwd else False
         except Exception as err:

@@ -6,7 +6,8 @@ Created on Sat Dec 7 17:31:04 2019
 """
 import os
 from shutil import copy
-from chat_utils import PROJECT_PATH
+
+PROJECT_PATH = './'
 
 def zip_compress(path, filename, pwd, delete = False):
     try:
@@ -14,7 +15,6 @@ def zip_compress(path, filename, pwd, delete = False):
         # print(os.getcwd())
         if not os.path.exists(filename):
             return 1002
-        # print('[Zip]', filename, pwd)
         cmd = "zip -P %s -r %s %s" % (pwd, filename + '.zip', filename)
         status = os.system(cmd)
         if status != 0:
@@ -33,7 +33,6 @@ def zip_decompress(path, zip_name, pwd, delete = False):
         os.chdir(path)
         if not os.path.exists(zip_name):
             return 1002
-        # print('[Unzip]', zip_name, pwd)
         cmd = "unzip -P %s %s" % (pwd, zip_name)
         status = os.system(cmd)
         if status != 0:
@@ -68,11 +67,14 @@ def zip_recrypt(zip_path, to_path, zip_name, pwd1, pwd2):
 
 if __name__ == "__main__":
 
-    zip_compress('./', '1.txt', '111', True)
-
-    input('Zip finished, press enter to Unzip.')
+    input('[Zip Demo]:\n\nPress enter to Zip 1.txt:')
     print()
 
-    zip_decompress('./demo/', 'note1.txt.zip', '111', True)
+    zip_compress('./', '1.txt', '111', True)
+
+    input('Zip finished, press enter to Unzip:')
+    print()
+
+    zip_decompress('./', '1.txt.zip', '111', False)
 
     # zip_recrypt('./demo/', './user/', 'aaa.txt.zip', '111', '222')

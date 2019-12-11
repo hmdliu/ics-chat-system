@@ -6,6 +6,7 @@ Created on Sat Dec 9 08:41:19 2019
 """
 
 from ftplib import FTP
+from chat_utils import CHAT_IP
 
 class MyFtp():
     def __init__(self):
@@ -14,7 +15,7 @@ class MyFtp():
     def ftp_login(self, host_ip, username, password):
         try:
             self.ftp_client.connect(host_ip, port = 2121, timeout = 3)
-        except :
+        except:
             print('[FTP Connect] Time out.')
             return 1001
         try:
@@ -54,7 +55,7 @@ class MyFtp():
 
 if __name__ == '__main__':
 
-    host_ip = 'localhost'
+    host_ip = CHAT_IP
     username = 'a'
     password = 'ew5HWFVHKsYSf3ZSBzs6PaEE2gbe7XMbTLikwR-Sbkc='
 
